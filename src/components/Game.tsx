@@ -1,145 +1,85 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react'
-import Confetti from 'react-confetti'
+import React, { useState, useEffect, useCallback } from 'react'
 import styles from './Game.module.css'
-import { useAuth } from '../app/leaderboard/AuthContext'
-import { incrementLeaderboardEntry } from '../app/actions/leaderboard'
 
-type Operation = '+' | '-' | '×' | '÷'
+const WORD_LIST = [
+  'apple', 'banana', 'cat', 'dog', 'elephant', 'frog', 'giraffe', 'house',
+  'ice cream', 'jacket', 'kite', 'lemon', 'monkey', 'nest', 'orange', 'penguin',
+  'queen', 'rabbit', 'sun', 'tree', 'umbrella', 'violin', 'water', 'xylophone',
+  'yellow', 'zebra'
+];
 
-type GameProps = {
-  grade: string | null;
-};
-
-export default function Game({ grade }: GameProps) {
-  const { user } = useAuth()
+const Game: React.FC = () => {
+  const [currentWord, setCurrentWord] = useState('')
+  const [userInput, setUserInput] = useState('')
   const [score, setScore] = useState(0)
-  const [question, setQuestion] = useState('')
-  const [answer, setAnswer] = useState('')
-  const [correctAnswer, setCorrectAnswer] = useState(0)
-  const [showConfetti, setShowConfetti] = useState(false)
-  const [feedback, setFeedback] = useState<string | null>(null)
+  const [message, setMessage] = useState('')
 
-  const playCorrectSound = useCallback(() => {
-    const audio = new Audio('/sounds/yay.mp3');
-    audio.play().catch(error => {
-      console.error('Error playing audio:', error);
-    });
+  const speakWord = useCallback((word: string) => {
+    const utterance = new SpeechSynthesisUtterance(word);
+    window.speechSynthesis.speak(utterance);
   }, []);
 
-  const generateQuestion = useCallback(() => {
-    let operations: Operation[]
-    let num1: number, num2: number
+  const getRandomWord = useCallback(() => {
+    const randomIndex = Math.floor(Math.random() * WORD_LIST.length);
+    return WORD_LIST[randomIndex];
+  }, []);
 
-    switch (grade) {
-      case '2':
-        operations = ['+', '-']
-        num1 = Math.floor(Math.random() * 20) + 1
-        num2 = Math.floor(Math.random() * 20) + 1
-        break
-      case '3':
-        operations = ['×', '÷']
-        if (Math.random() < 0.5) {
-          num1 = Math.floor(Math.random() * 10) + 1
-          num2 = Math.floor(Math.random() * 10) + 1
-        } else {
-          num2 = Math.floor(Math.random() * 10) + 1
-          num1 = num2 * (Math.floor(Math.random() * 10) + 1)
-        }
-        break
-      default: // Grade 1 or fallback
-        operations = ['+', '-']
-        num1 = Math.floor(Math.random() * 10) + 1
-        num2 = Math.floor(Math.random() * 10) + 1
-        break
-    }
-
-    const operation = operations[Math.floor(Math.random() * operations.length)]
-
-    // Ensure num1 is always greater than or equal to num2 for subtraction
-    if (operation === '-') {
-      [num1, num2] = [Math.max(num1, num2), Math.min(num1, num2)]
-    }
-
-    setQuestion(`${num1} ${operation} ${num2} = ?`)
-    setCorrectAnswer(eval(`${num1} ${operation === '×' ? '*' : operation === '÷' ? '/' : operation} ${num2}`))
-    setAnswer('')
-  }, [grade])
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (parseInt(answer) === correctAnswer) {
-      const newScore = score + 1
-      setScore(newScore)
-      setShowConfetti(true)
-      setFeedback('Correct! Great job!')
-      playCorrectSound()
-
-      // Update leaderboard if user is logged in
-      if (user) {
-        try {
-          const token = localStorage.getItem('token')
-          if (token) {
-            await incrementLeaderboardEntry(token)
-          }
-        } catch (error) {
-          console.error('Error updating leaderboard:', error)
-        }
-      }
-
-      setTimeout(() => {
-        setShowConfetti(false)
-        setFeedback(null)
-      }, 3000)
-    } else {
-      setFeedback(`Oops! The correct answer was ${correctAnswer}. Try again!`)
-      setTimeout(() => setFeedback(null), 3000)
-    }
-    generateQuestion()
-  }
+  const startNewRound = useCallback(() => {
+    const newWord = getRandomWord();
+    setCurrentWord(newWord);
+    setUserInput('');
+    speakWord(newWord);
+    setMessage('');
+  }, [getRandomWord, speakWord]);
 
   useEffect(() => {
-    generateQuestion()
-  }, [generateQuestion])
+    startNewRound();
+  }, [startNewRound]);
 
-  const getBackgroundClass = () => {
-    switch (grade) {
-      case '2':
-        return styles.backgroundGrade2
-      case '3':
-        return styles.backgroundGrade3
-      default:
-        return styles.backgroundGrade1
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUserInput(e.target.value);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (userInput.toLowerCase() === currentWord.toLowerCase()) {
+      setScore(score + 1);
+      setMessage('Correct! 🎉');
+    } else {
+      setMessage(`Incorrect. The correct spelling is "${currentWord}".`);
     }
-  }
+    setTimeout(startNewRound, 2000);
+  };
+
+  const handleRepeatWord = () => {
+    speakWord(currentWord);
+  };
 
   return (
-    <div className={`flex flex-col items-center justify-center min-h-screen py-2 ${getBackgroundClass()} overflow-hidden font-comic-sans relative`}>
-      <h1 className="text-4xl font-bold mb-4 text-purple-700 z-10">Math Buddy Game</h1>
-      <p className="text-2xl mb-4 text-green-600 z-10">Score: {score}</p>
-      <div className="text-3xl mb-4 text-blue-600 font-semibold z-10">{question}</div>
-      <form onSubmit={handleSubmit} className="flex flex-col items-center z-10">
-        <input
-          type="number"
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
-          className="border-2 border-purple-400 p-2 rounded-md text-xl mb-4 text-black bg-white font-comic-sans"
-          placeholder="Enter your answer"
-        />
-        <button
-          type="submit"
-          className="px-4 py-2 font-bold text-white bg-green-500 rounded-full hover:bg-green-600 transform hover:scale-105 transition duration-200 font-comic-sans"
-        >
-          Submit
-        </button>
-      </form>
-      {feedback && (
-        <div className={`mt-4 p-2 rounded-md z-10 font-comic-sans ${feedback.startsWith('Correct') ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}`}>
-          {feedback}
-        </div>
-      )}
-      {showConfetti && <Confetti width={window.innerWidth} height={window.innerHeight} />}
+    <div className={styles.game}>
+      <div className={styles.scoreBoard}>
+        <h2>Spelling Buddy</h2>
+        <p>Points: {score}</p>
+      </div>
+      <div className={styles.gameArea}>
+        <button onClick={handleRepeatWord} className={styles.speakButton}>🔊 Speak Word</button>
+        <form onSubmit={handleSubmit} className={styles.inputForm}>
+          <input
+            type="text"
+            value={userInput}
+            onChange={handleInputChange}
+            placeholder="Type the word here"
+            className={styles.input}
+            autoFocus
+          />
+          <button type="submit" className={styles.submitButton}>Submit</button>
+        </form>
+        {message && <p className={styles.message}>{message}</p>}
+      </div>
     </div>
-  )
-}
+  );
+};
+
+export default Game;

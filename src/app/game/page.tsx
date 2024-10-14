@@ -23,7 +23,7 @@ function GamePageContent() {
       <Link href={`/leaderboard?from=game&grade=${grade}`} className={`${styles.leaderboardButton} font-comic-sans`}>
         Leaderboard
       </Link>
-      <Game grade={grade} />
+      <Game />
       <HoppingAnimals />  {/* Add this line */}
     </div>
   )
