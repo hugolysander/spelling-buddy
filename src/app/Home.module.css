@@ -1,0 +1,111 @@
+.homePage {
+  text-align: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+  min-height: 100vh;
+  font-family: 'Comic Sans MS', 'Chalkboard SE', cursive, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.title {
+  font-size: 3.5rem;
+  color: #4a4a4a;
+  margin-bottom: 1rem;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  animation: rainbow 3s infinite;
+}
+
+.subtitle {
+  font-size: 1.8rem;
+  color: #5a5a5a;
+  margin-bottom: 2rem;
+}
+
+.characters {
+  font-size: 3rem;
+  margin-bottom: 2rem;
+}
+
+.emoji {
+  margin: 0 10px;
+  animation: bounce 0.5s infinite alternate;
+}
+
+.startButton {
+  font-size: 1.5rem;
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-decoration: none;
+}
+
+.startButton:hover {
+  background-color: #45a049;
+  transform: scale(1.05);
+}
+
+.gradeButtons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.gradeButton {
+  font-size: 1.2rem;
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-decoration: none;
+}
+
+.gradeButton:hover {
+  background-color: #45a049;
+  transform: scale(1.05);
+}
+
+.leaderboardButton {
+  font-size: 1.2rem;
+  padding: 10px 20px;
+  background-color: #3f51b5;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-decoration: none;
+  margin-top: 2rem;
+}
+
+.leaderboardButton:hover {
+  background-color: #303f9f;
+  transform: scale(1.05);
+}
+
+@keyframes rainbow {
+  0% { color: red; }
+  14% { color: orange; }
+  28% { color: yellow; }
+  42% { color: green; }
+  57% { color: blue; }
+  71% { color: indigo; }
+  85% { color: violet; }
+  100% { color: red; }
+}
+
+@keyframes bounce {
+  from { transform: translateY(0); }
+  to { transform: translateY(-10px); }
+}
